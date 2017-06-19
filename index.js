@@ -29,8 +29,6 @@ class SortableFlatList extends React.PureComponent {
     _onGhostChangeY = (dy) => {
         // dy: -40, itemHeight: 80 -> -1
         const indexChange = parseInt(dy / (this.props.itemHeight / 2), 10);
-        console.log(dy, (this.props.itemHeight / 2), indexChange);
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         const newIndex = Math.min(Math.max(this.state.selectedIndex + indexChange, 0), this.props.data.length - 1);
         this._setItemToIndex(this.props.keyExtractor(this.state.selectedItem), newIndex);
     }
@@ -62,6 +60,7 @@ class SortableFlatList extends React.PureComponent {
         const dataWithoutItem = this._removeAtIndex(data, indexOfItem);
         const newDataArray = this._addAtIndex(dataWithoutItem, index, item);
         if (keyExtractor(data[index]) !== keyExtractor(newDataArray[index])) {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
             this.setState({ data: newDataArray });
         }
     }

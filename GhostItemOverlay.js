@@ -16,10 +16,9 @@ class GhostItemOverLay extends React.Component {
         super(props);
 
         this.itemLayoutDetails = [];
-        this.yOffset = new Animated.Value(0);
-        this.state = { visible: false, selectedItem: null, selectedIndex: null };
+        this.state = { yOffset: new Animated.Value(0), visible: false, selectedItem: null, selectedIndex: null };
         this.calculateItemsLayoutDetails(props.data);
-        this.yOffset.addListener((e) => {
+        this.state.yOffset.addListener((e) => {
             this.props.onChangeY(e.value);
         });
     }
@@ -29,8 +28,8 @@ class GhostItemOverLay extends React.Component {
             onStartShouldSetResponderCapture: () => this.state.visible,
             onMoveShouldSetResponderCapture: () => this.state.visible,
             onMoveShouldSetPanResponderCapture: () => this.state.visible,
-            onPanResponderGrant: () => { this.yOffset.setValue(0); },
-            onPanResponderMove: Animated.event([null, { dy: this.yOffset }]),
+            onPanResponderGrant: () => { this.state.yOffset.setValue(0); },
+            onPanResponderMove: Animated.event([null, { dy: this.state.yOffset }]),
             onPanResponderRelease: (e, { vx, vy }) => {
                 this.unselectItem();
             },
@@ -57,6 +56,7 @@ class GhostItemOverLay extends React.Component {
             visible: false,
         });
         this.props.onUnselectItem();
+        // this.yOffset.setValue(0);
     }
 
     getIndexForYLocation = (yLocation) => {
@@ -70,7 +70,7 @@ class GhostItemOverLay extends React.Component {
     }
 
     getItemTransForm() {
-        return { transform: [{ translateY: this.yOffset }] };
+        return { transform: [{ translateY: this.state.yOffset }] };
     }
 
     calculateItemsLayoutDetails = (items) => {
