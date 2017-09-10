@@ -23,15 +23,26 @@ class SortableFlatList extends React.PureComponent {
 
     constructor(props) {
         super(props);
-        this.state = { data: props.data, selectedItem: null, selectedIndex: null };
+        this.state = {
+            data: props.data,
+            selectedItem: null,
+            selectedIndex: null,
+        };
     }
 
     _onGhostChangeY = (dy) => {
+        if (this.state.selectedItem === null) return;
         // dy: -40, itemHeight: 80 -> -1
         const indexChange = parseInt(dy / (this.props.itemHeight / 2), 10);
-        const newIndex = Math.min(Math.max(this.state.selectedIndex + indexChange, 0), this.props.data.length - 1);
+        const newIndex = Math.min(
+                Math.max(this.state.selectedIndex + indexChange, 0),
+                this.props.data.length - 1,
+        );
+
         this._setItemToIndex(this.props.keyExtractor(this.state.selectedItem), newIndex);
     }
+
+    _indexForItem = item => this._indexForItemId(this.props.keyExtractor(item))
 
     _indexForItemId(itemId) {
         const { keyExtractor } = this.props;
@@ -64,6 +75,7 @@ class SortableFlatList extends React.PureComponent {
             this.setState({ data: newDataArray });
         }
     }
+
 
     _renderItem = (itemProps) => {
         const { keyExtractor } = this.props;
@@ -103,6 +115,17 @@ class SortableFlatList extends React.PureComponent {
 
         return { length: itemHeight, offset: itemHeight * index, index };
     }
+
+    _calculateItemsLayoutDetails = items => items.map((elem, index) => {
+        const { length, offset } = this._getItemLayoutForIndex(index);
+        return {
+            height: length,
+            minY: offset,
+            midY: offset + (length / 2),
+            maxY: offset + length,
+        };
+    })
+
     _getItemLayout = (data, index) => this._getItemLayoutForIndex(index)
 
     render() {
@@ -119,12 +142,13 @@ class SortableFlatList extends React.PureComponent {
                     getItemLayout={this._getItemLayout}
                 />
                 <GhostItemOverlay
-                    getItemLayoutForIndex={this._getItemLayoutForIndex}
+                    itemLayoutDetails={this._calculateItemsLayoutDetails(data)}
                     data={this.state.data}
                     renderItem={this.props.renderItem}
                     onChangeY={this._onGhostChangeY}
                     onSelectItem={this._selectItem}
                     onUnselectItem={this._unselectItem}
+                    indexForItem={this._indexForItem}
                 />
             </View>
         );

@@ -1,13 +1,20 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { View, Animated, TouchableWithoutFeedback, StyleSheet, PanResponder } from 'react-native';
+import { View, Animated, StyleSheet, PanResponder } from 'react-native';
+
 
 const propTypes = {
     onChangeY: PropTypes.func.isRequired,
     onSelectItem: PropTypes.func.isRequired,
     renderItem: PropTypes.func.isRequired,
     data: PropTypes.arrayOf(PropTypes.object),
-    getItemLayoutForIndex: PropTypes.func.isRequired,
+    indexForItem: PropTypes.func.isRequired,
+    itemLayoutDetails: PropTypes.arrayOf(PropTypes.shape({
+        height: PropTypes.number,
+        minY: PropTypes.number,
+        midY: PropTypes.number,
+        maxY: PropTypes.number,
+    }).isRequired).isRequired,
     onUnselectItem: PropTypes.func.isRequired,
 };
 
@@ -15,32 +22,37 @@ class GhostItemOverLay extends React.Component {
     constructor(props) {
         super(props);
 
-        this.itemLayoutDetails = [];
-        this.state = { yOffset: new Animated.Value(0), visible: false, selectedItem: null, selectedIndex: null };
-        this.calculateItemsLayoutDetails(props.data);
+        this.state = {
+            yOffset: new Animated.Value(0),
+            visible: false,
+            selectedItem: null,
+            selectedIndex: null,
+            animatingToEndPosition: false,
+        };
         this.state.yOffset.addListener((e) => {
-            this.props.onChangeY(e.value);
+            if (!this.state.animatingToEndPosition) {
+                this.props.onChangeY(e.value);
+            }
         });
     }
 
     componentWillMount() {
         this._panResponder = PanResponder.create({
-            onStartShouldSetResponderCapture: () => this.state.visible,
+            onStartShouldSetResponderCapture: () => true,
+            onStartShouldSetPanResponderCapture: () => true,
             onMoveShouldSetResponderCapture: () => this.state.visible,
             onMoveShouldSetPanResponderCapture: () => this.state.visible,
-            onPanResponderGrant: () => { this.state.yOffset.setValue(0); },
-            onPanResponderMove: Animated.event([null, { dy: this.state.yOffset }]),
-            onPanResponderRelease: (e, { vx, vy }) => {
-                this.unselectItem();
+            onPanResponderGrant: (e) => {
+                this.onLongPress(e);
+                this.state.yOffset.setValue(0);
             },
+            onPanResponderMove: Animated.event([null, { dy: this.state.yOffset }]),
+            onPanResponderRelease: this.unselectItem,
+            onPanResponderTerminationRequest: this.unselectItem,
+            onPanResponderTerminate: this.unselectItem,
         });
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (this.props.data !== nextProps.data) {
-            this.calculateItemsLayoutDetails(nextProps.data);
-        }
-    }
 
     onLongPress = ({ nativeEvent: { locationY } }) => {
         const index = this.getIndexForYLocation(locationY);
@@ -49,19 +61,36 @@ class GhostItemOverLay extends React.Component {
         this.props.onSelectItem({ item, index });
     }
 
-    unselectItem() {
-        this.setState({
-            selectedItem: null,
-            selectedIndex: null,
-            visible: false,
-        });
-        this.props.onUnselectItem();
-        // this.yOffset.setValue(0);
+    unselectItem = () => {
+        if (this.state.selectedItem === null) return;
+
+        const newIndex = this.props.indexForItem(this.state.selectedItem);
+        const initalLayout = this.props.itemLayoutDetails[this.state.selectedIndex];
+        const targetItem = this.props.itemLayoutDetails[newIndex];
+        const targetY = targetItem.minY - initalLayout.minY;
+        this.setState({ animatingToEndPosition: true });
+
+        Animated.timing(this.state.yOffset, {
+            toValue: targetY,
+            duration: 190,
+            useNativeDriver: true,
+        })
+         .start(() => {
+             this.setState({ animatingToEndPosition: false });
+             this.setState({
+                 selectedItem: null,
+                 selectedIndex: null,
+                 visible: false,
+             });
+             this.props.onUnselectItem();
+         });
+
+        return true;
     }
 
     getIndexForYLocation = (yLocation) => {
         let resultIndex = null;
-        this.itemLayoutDetails.forEach(({ minY, maxY }, index) => {
+        this.props.itemLayoutDetails.forEach(({ minY, maxY }, index) => {
             if (yLocation > minY && yLocation < maxY) {
                 resultIndex = index;
             }
@@ -73,37 +102,26 @@ class GhostItemOverLay extends React.Component {
         return { transform: [{ translateY: this.state.yOffset }] };
     }
 
-    calculateItemsLayoutDetails = (items) => {
-        this.itemLayoutDetails = items.map((elem, index) => {
-            const { length, offset } = this.props.getItemLayoutForIndex(index);
-            return {
-                height: length,
-                minY: offset,
-                midY: offset + (length / 2),
-                maxY: offset + length,
-            };
-        });
-    }
 
     render() {
         const { renderItem } = this.props;
         const { selectedIndex } = this.state;
-        const selectedLayoutDetails = this.itemLayoutDetails[selectedIndex] || {};
-        const invisibleStyles = [StyleSheet.absoluteFill, { backgroundColor: 'rgba(255, 0, 0, 0.1)', zIndex: 2 }];
+        const selectedLayoutDetails = this.props.itemLayoutDetails[selectedIndex] || {};
+        const invisibleStyles = [StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.1)', zIndex: 2 }];
         const visibleStyles = [{ position: 'absolute', top: selectedLayoutDetails.minY, height: selectedLayoutDetails.height, width: '100%', zIndex: 2 }];
         return (
 
             <Animated.View
                 {...this._panResponder.panHandlers}
-                style={[this.state.visible ? visibleStyles : invisibleStyles, this.state.visible && this.getItemTransForm()]}
+                style={this.state.visible ? [visibleStyles, this.getItemTransForm()] : invisibleStyles}
             >
-                <TouchableWithoutFeedback onLongPress={this.onLongPress}>
-                    <View style={StyleSheet.absoluteFill}>
-                        {this.state.visible && this.state.selectedItem &&
-                          renderItem({ item: this.state.selectedItem, isGhost: true })
-                        }
-                    </View>
-                </TouchableWithoutFeedback>
+
+                <View style={StyleSheet.absoluteFill}>
+                    {this.state.visible && this.state.selectedItem &&
+                        renderItem({ item: this.state.selectedItem, isGhost: true })
+                    }
+                </View>
+
             </Animated.View>
 
         );
