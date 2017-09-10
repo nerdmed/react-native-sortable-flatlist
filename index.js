@@ -8,6 +8,7 @@ import ListItem from './ListItem';
 import GhostItemOverlay from './GhostItemOverlay';
 
 const propTypes = {
+    wrapperStyle: PropTypes.style,
     itemHeight: PropTypes.number.isRequired,
     seperatorBackgroundColor: ColorPropType,
     seperatorColor: ColorPropType,
@@ -83,22 +84,22 @@ class SortableFlatList extends React.PureComponent {
         const selectedKey = selectedItem && keyExtractor(selectedItem);
         const itemKey = keyExtractor(itemProps.item);
         return (
-            <ListItem
-                {...itemProps}
-                itemHeight={this.props.itemHeight}
-                showPlaceHolder={selectedKey === itemKey}
-                renderItem={this.props.renderItem}
-            />
+          <ListItem
+            {...itemProps}
+            itemHeight={this.props.itemHeight}
+            showPlaceHolder={selectedKey === itemKey}
+            renderItem={this.props.renderItem}
+          />
         );
     };
 
     _renderListSeperator = ({ highlighted }) => (
-        <ListSeparator
-            color={this.props.seperatorColor}
-            backgroundColor={this.props.seperatorBackgroundColor}
-            paddingLeft={this.props.seperatorLeftPadding}
-            highlighted={this.state.animating && highlighted}
-        />
+      <ListSeparator
+        color={this.props.seperatorColor}
+        backgroundColor={this.props.seperatorBackgroundColor}
+        paddingLeft={this.props.seperatorLeftPadding}
+        highlighted={this.state.animating && highlighted}
+      />
     )
 
     _selectItem = ({ item, index }) => {
@@ -130,27 +131,28 @@ class SortableFlatList extends React.PureComponent {
 
     render() {
         // we will override renderItem and data with local versions
-        const { renderItem, data, ...remainingProps } = this.props;
+        const { wrapperStyle, data, ...remainingProps } = this.props;
+        const itemLayoutDetails = this._calculateItemsLayoutDetails(data);
         return (
-            <View>
-                <FlatList
-                    scrollEnabled={!!this.state.selectedItem}
-                    ItemSeparatorComponent={this._renderListSeperator}
-                    {...remainingProps}
-                    renderItem={this._renderItem}
-                    data={this.state.data}
-                    getItemLayout={this._getItemLayout}
-                />
-                <GhostItemOverlay
-                    itemLayoutDetails={this._calculateItemsLayoutDetails(data)}
-                    data={this.state.data}
-                    renderItem={this.props.renderItem}
-                    onChangeY={this._onGhostChangeY}
-                    onSelectItem={this._selectItem}
-                    onUnselectItem={this._unselectItem}
-                    indexForItem={this._indexForItem}
-                />
-            </View>
+          <View style={wrapperStyle}>
+            <FlatList
+              scrollEnabled={!!this.state.selectedItem}
+              ItemSeparatorComponent={this._renderListSeperator}
+              {...remainingProps}
+              renderItem={this._renderItem}
+              data={this.state.data}
+              getItemLayout={this._getItemLayout}
+            />
+            <GhostItemOverlay
+              itemLayoutDetails={itemLayoutDetails}
+              data={this.state.data}
+              renderItem={this.props.renderItem}
+              onChangeY={this._onGhostChangeY}
+              onSelectItem={this._selectItem}
+              onUnselectItem={this._unselectItem}
+              indexForItem={this._indexForItem}
+            />
+          </View>
         );
     }
 

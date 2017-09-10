@@ -111,18 +111,18 @@ class GhostItemOverLay extends React.Component {
         const visibleStyles = [{ position: 'absolute', top: selectedLayoutDetails.minY, height: selectedLayoutDetails.height, width: '100%', zIndex: 2 }];
         return (
 
-            <Animated.View
-                {...this._panResponder.panHandlers}
-                style={this.state.visible ? [visibleStyles, this.getItemTransForm()] : invisibleStyles}
-            >
+          <Animated.View
+            {...this._panResponder.panHandlers}
+            style={this.state.visible ? [visibleStyles, this.getItemTransForm()] : invisibleStyles}
+          >
 
-                <View style={StyleSheet.absoluteFill}>
-                    {this.state.visible && this.state.selectedItem &&
+            <View style={StyleSheet.absoluteFill}>
+              {this.state.visible && this.state.selectedItem &&
                         renderItem({ item: this.state.selectedItem, isGhost: true })
                     }
-                </View>
+            </View>
 
-            </Animated.View>
+          </Animated.View>
 
         );
     }

@@ -20,9 +20,9 @@ const defaultProps = {
 const ListSeparator = ({ color, backgroundColor, paddingLeft, highlighted }) => {
     if (highlighted) return null;
     return (
-        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor, paddingLeft }} >
-            <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: color }} />
-        </View>
+      <View style={{ height: StyleSheet.hairlineWidth, backgroundColor, paddingLeft }} >
+        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: color }} />
+      </View>
     );
 };
 

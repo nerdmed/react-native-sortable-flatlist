@@ -12,17 +12,12 @@ const propTypes = {
 };
 
 class ListItem extends React.PureComponent {
-    componentDidMount() {
-        // if (this.props.item.title === 'New York') {
-        //     this.props.separators.highlight();
-        // }
-    }
     render() {
         const { item, showPlaceHolder, itemHeight, renderItem } = this.props;
         return (
-            <View onLayout={() => console.log('Layout List Item')}>
-                {showPlaceHolder ? <View style={{ height: itemHeight }} /> : renderItem({ item })}
-            </View>
+          <View>
+            {showPlaceHolder ? <View style={{ height: itemHeight }} /> : renderItem({ item })}
+          </View>
         );
     }
 }
