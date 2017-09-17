@@ -8,6 +8,7 @@ const propTypes = {
     index: PropTypes.number.isRequired,
     itemHeight: PropTypes.number.isRequired,
     showPlaceHolder: PropTypes.bool.isRequired,
+    extraData: PropTypes.any,
 
 };
 

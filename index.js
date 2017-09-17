@@ -82,13 +82,15 @@ class SortableFlatList extends React.PureComponent {
 
 
     _renderItem = (itemProps) => {
-        const { keyExtractor } = this.props;
+        const { keyExtractor, extraData } = this.props;
+
         const { selectedItem } = this.state;
         const selectedKey = selectedItem && keyExtractor(selectedItem);
         const itemKey = keyExtractor(itemProps.item);
         return (
           <ListItem
             {...itemProps}
+            extraData={extraData}
             itemHeight={this.props.itemHeight}
             showPlaceHolder={selectedKey === itemKey}
             renderItem={this.props.renderItem}
@@ -146,6 +148,7 @@ class SortableFlatList extends React.PureComponent {
     render() {
         // we will override renderItem and data with local versions
         const { sortable, wrapperStyle, data, ...remainingProps } = this.props;
+        console.log(remainingProps);
         const itemLayoutDetails = this._calculateItemsLayoutDetails(data);
         return (
           <View style={wrapperStyle}>
