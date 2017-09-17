@@ -14,11 +14,7 @@ const propTypes = {
 class ListItem extends React.PureComponent {
     render() {
         const { item, showPlaceHolder, itemHeight, renderItem } = this.props;
-        return (
-          <View>
-            {showPlaceHolder ? <View style={{ height: itemHeight }} /> : renderItem({ item })}
-          </View>
-        );
+        return showPlaceHolder ? <View style={{ height: itemHeight }} /> : renderItem({ item });
     }
 }
 

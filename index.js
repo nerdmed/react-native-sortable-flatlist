@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { FlatList, View, LayoutAnimation, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
@@ -9,6 +10,7 @@ import GhostItemOverlay from './GhostItemOverlay';
 
 const propTypes = {
     wrapperStyle: PropTypes.style,
+    sortable: PropTypes.bool.isRequired,
     itemHeight: PropTypes.number.isRequired,
     seperatorBackgroundColor: ColorPropType,
     seperatorColor: ColorPropType,
@@ -17,6 +19,7 @@ const propTypes = {
 };
 
 const defaultProps = {
+    sortable: true,
     keyExtractor: FlatList.defaultProps.keyExtractor,
 };
 
@@ -128,30 +131,36 @@ class SortableFlatList extends React.PureComponent {
     })
 
     _getItemLayout = (data, index) => this._getItemLayoutForIndex(index)
+    renderGhostItem = itemLayoutDetails => (
+      <GhostItemOverlay
+        itemLayoutDetails={itemLayoutDetails}
+        data={this.state.data}
+        renderItem={this.props.renderItem}
+        onChangeY={this._onGhostChangeY}
+        onSelectItem={this._selectItem}
+        onUnselectItem={this._unselectItem}
+        indexForItem={this._indexForItem}
+      />
+    )
 
     render() {
         // we will override renderItem and data with local versions
-        const { wrapperStyle, data, ...remainingProps } = this.props;
+        const { sortable, wrapperStyle, data, ...remainingProps } = this.props;
         const itemLayoutDetails = this._calculateItemsLayoutDetails(data);
         return (
           <View style={wrapperStyle}>
+
             <FlatList
-              scrollEnabled={!!this.state.selectedItem}
+              scrollEnabled={!sortable || !!this.state.selectedItem}
               ItemSeparatorComponent={this._renderListSeperator}
               {...remainingProps}
               renderItem={this._renderItem}
               data={this.state.data}
               getItemLayout={this._getItemLayout}
             />
-            <GhostItemOverlay
-              itemLayoutDetails={itemLayoutDetails}
-              data={this.state.data}
-              renderItem={this.props.renderItem}
-              onChangeY={this._onGhostChangeY}
-              onSelectItem={this._selectItem}
-              onUnselectItem={this._unselectItem}
-              indexForItem={this._indexForItem}
-            />
+
+            {sortable && this.renderGhostItem(itemLayoutDetails)}
+
           </View>
         );
     }

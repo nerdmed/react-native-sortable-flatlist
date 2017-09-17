@@ -107,7 +107,7 @@ class GhostItemOverLay extends React.Component {
         const { renderItem } = this.props;
         const { selectedIndex } = this.state;
         const selectedLayoutDetails = this.props.itemLayoutDetails[selectedIndex] || {};
-        const invisibleStyles = [StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.1)', zIndex: 2 }];
+        const invisibleStyles = [StyleSheet.absoluteFill, { zIndex: 2 }];
         const visibleStyles = [{ position: 'absolute', top: selectedLayoutDetails.minY, height: selectedLayoutDetails.height, width: '100%', zIndex: 2 }];
         return (
 
