@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
-import { FlatList, View, LayoutAnimation, StyleSheet } from 'react-native';
+import { InteractionManager, FlatList, View, LayoutAnimation, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 import ColorPropType from 'ColorPropType';
 
@@ -15,6 +15,7 @@ const propTypes = {
     seperatorBackgroundColor: ColorPropType,
     seperatorColor: ColorPropType,
     seperatorLeftPadding: PropTypes.number,
+    onChangeSorting: PropTypes.func,
     ...FlatList.propTypes,
 };
 
@@ -68,7 +69,7 @@ class SortableFlatList extends React.PureComponent {
     }
 
     _setItemToIndex = (itemId, index) => {
-        const { keyExtractor } = this.props;
+        const { keyExtractor, onChangeSorting } = this.props;
         const { data } = this.state;
         const indexOfItem = this._indexForItemId(itemId);
         const item = data[indexOfItem];
@@ -77,6 +78,16 @@ class SortableFlatList extends React.PureComponent {
         if (keyExtractor(data[index]) !== keyExtractor(newDataArray[index])) {
             LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
             this.setState({ data: newDataArray });
+            if (onChangeSorting) {
+                InteractionManager.runAfterInteractions(() => {
+                    onChangeSorting({
+                        data: newDataArray,
+                        changedItem: newDataArray[index],
+                        oldIndex: indexOfItem,
+                        newIndex: index,
+                    });
+                });
+            }
         }
     }
 
@@ -147,8 +158,9 @@ class SortableFlatList extends React.PureComponent {
 
     render() {
         // we will override renderItem and data with local versions
-        const { sortable, wrapperStyle, data, ...remainingProps } = this.props;
-        console.log(remainingProps);
+        // remvoe all props we dont want to pass
+        // eslint-disable-next-line no-unused-vars
+        const { onChangeSorting, sortable, wrapperStyle, data, ...remainingProps } = this.props;
         const itemLayoutDetails = this._calculateItemsLayoutDetails(data);
         return (
           <View style={wrapperStyle}>
